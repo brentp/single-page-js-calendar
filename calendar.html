@@ -196,12 +196,14 @@ td:empty {
 .date {
   display: inline-block;
   width: 1.1em;
+  font-size: 0.9vmin;
 }
 .day {
   display: inline-block;
   text-align: center;
   width: 1em;
   color: #888;
+  font-size: 0.9vmin;
 }
 .weekend {
   background: #eee;
@@ -211,10 +213,12 @@ td:empty {
   box-shadow: inset 0 0 0 2px #3b82f6;
 }
 .cell-label {
-  font-size: 0.8em;
-  color: #555;
+  font-size: 1em;
+  color: #000;
   margin-left: 0.3em;
   text-transform: none;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 400;
 }
 * {
   color-adjust: exact;
@@ -341,10 +345,6 @@ const calendar = (function() {
           if (data) {
             if (data.color) cell.style.backgroundColor = data.color;
             if (data.textColor) cell.style.color = data.textColor;
-            if (data.fontFamily) cell.style.fontFamily = data.fontFamily;
-            if (data.fontSize) cell.style.fontSize = data.fontSize;
-            if (data.fontWeight) cell.style.fontWeight = data.fontWeight;
-            if (data.fontStyle) cell.style.fontStyle = data.fontStyle;
             if (data.borderBottomColor) cell.style.borderBottomColor = data.borderBottomColor;
             if (data.borderBottomWidth) cell.style.borderBottomWidth = data.borderBottomWidth;
             if (data.borderLeftColor) {
@@ -368,10 +368,15 @@ const calendar = (function() {
           
           // Add label if exists
           if (data && data.label) {
+            cell.style.verticalAlign = 'top';
             const labelSpan = document.createElement('span');
             labelSpan.className = 'cell-label';
-            labelSpan.textContent = data.label;
-            labelSpan.title = data.label;
+            labelSpan.innerHTML = data.label;
+            labelSpan.title = data.label.replace(/<[^>]*>/g, '');
+            if (data.fontFamily) labelSpan.style.fontFamily = data.fontFamily;
+            if (data.fontSize) labelSpan.style.fontSize = data.fontSize;
+            if (data.fontWeight) labelSpan.style.fontWeight = data.fontWeight;
+            if (data.fontStyle) labelSpan.style.fontStyle = data.fontStyle;
             cell.appendChild(labelSpan);
           }
         } else if (day === 31 && month === 10) {
@@ -433,31 +438,44 @@ const calendar = (function() {
     if (options.label) {
       cellData[key].label = options.label;
       if (cell) {
+        cell.style.verticalAlign = 'top';
         let labelSpan = cell.querySelector('.cell-label');
         if (!labelSpan) {
           labelSpan = document.createElement('span');
           labelSpan.className = 'cell-label';
           cell.appendChild(labelSpan);
         }
-        labelSpan.textContent = options.label;
-        labelSpan.title = options.label;
+        labelSpan.innerHTML = options.label;
+        labelSpan.title = options.label.replace(/<[^>]*>/g, '');
       }
     }
     if (options.fontFamily) {
       cellData[key].fontFamily = options.fontFamily;
-      if (cell) cell.style.fontFamily = options.fontFamily;
+      if (cell) {
+        let labelSpan = cell.querySelector('.cell-label');
+        if (labelSpan) labelSpan.style.fontFamily = options.fontFamily;
+      }
     }
     if (options.fontSize) {
       cellData[key].fontSize = options.fontSize;
-      if (cell) cell.style.fontSize = options.fontSize;
+      if (cell) {
+        let labelSpan = cell.querySelector('.cell-label');
+        if (labelSpan) labelSpan.style.fontSize = options.fontSize;
+      }
     }
     if (options.fontWeight) {
       cellData[key].fontWeight = options.fontWeight;
-      if (cell) cell.style.fontWeight = options.fontWeight;
+      if (cell) {
+        let labelSpan = cell.querySelector('.cell-label');
+        if (labelSpan) labelSpan.style.fontWeight = options.fontWeight;
+      }
     }
     if (options.fontStyle) {
       cellData[key].fontStyle = options.fontStyle;
-      if (cell) cell.style.fontStyle = options.fontStyle;
+      if (cell) {
+        let labelSpan = cell.querySelector('.cell-label');
+        if (labelSpan) labelSpan.style.fontStyle = options.fontStyle;
+      }
     }
     if (options.borderBottomColor) {
       cellData[key].borderBottomColor = options.borderBottomColor;
