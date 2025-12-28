@@ -411,74 +411,38 @@ const calendar = (function() {
   // API Methods
   
   /**
-   * Set the background color for a specific date
+   * Set properties for a date cell
    * @param {number} month - Month (1-12)
    * @param {number} day - Day of month (1-31)
-   * @param {string} color - CSS color value
+   * @param {object} options - { color, textColor, label, fontFamily, fontSize, fontWeight, fontStyle, borderBottomColor, borderBottomWidth, borderLeftColor, borderLeftWidth }
    */
-  function setColor(month, day, color) {
-    const key = dateKey(currentYear, month - 1, day);
-    if (!cellData[key]) cellData[key] = {};
-    cellData[key].color = color;
-    
-    const cell = getCell(month - 1, day);
-    if (cell) cell.style.backgroundColor = color;
-  }
-  
-  /**
-   * Set the text color for a specific date
-   * @param {number} month - Month (1-12)
-   * @param {number} day - Day of month (1-31)
-   * @param {string} color - CSS color value
-   */
-  function setTextColor(month, day, color) {
-    const key = dateKey(currentYear, month - 1, day);
-    if (!cellData[key]) cellData[key] = {};
-    cellData[key].textColor = color;
-    
-    const cell = getCell(month - 1, day);
-    if (cell) cell.style.color = color;
-  }
-  
-  /**
-   * Set a label/text for a specific date
-   * @param {number} month - Month (1-12)
-   * @param {number} day - Day of month (1-31)
-   * @param {string} label - Label text
-   */
-  function setLabel(month, day, label) {
-    const key = dateKey(currentYear, month - 1, day);
-    if (!cellData[key]) cellData[key] = {};
-    cellData[key].label = label;
-    
-    const cell = getCell(month - 1, day);
-    if (cell) {
-      let labelSpan = cell.querySelector('.cell-label');
-      if (!labelSpan) {
-        labelSpan = document.createElement('span');
-        labelSpan.className = 'cell-label';
-        cell.appendChild(labelSpan);
-      }
-      labelSpan.textContent = label;
-      labelSpan.title = label;
-    }
-  }
-  
-  /**
-    * Set both color and label for a date
-    * @param {number} month - Month (1-12)
-    * @param {number} day - Day of month (1-31)
-    * @param {object} options - { color, textColor, label, fontFamily, fontSize, fontWeight, fontStyle, borderBottomColor, borderBottomWidth, borderLeftColor, borderLeftWidth }
-    */
   function setCell(month, day, options) {
     const key = dateKey(currentYear, month - 1, day);
     if (!cellData[key]) cellData[key] = {};
     
-    if (options.color) setColor(month, day, options.color);
-    if (options.textColor) setTextColor(month, day, options.textColor);
-    if (options.label) setLabel(month, day, options.label);
-    
     const cell = getCell(month - 1, day);
+    
+    if (options.color) {
+      cellData[key].color = options.color;
+      if (cell) cell.style.backgroundColor = options.color;
+    }
+    if (options.textColor) {
+      cellData[key].textColor = options.textColor;
+      if (cell) cell.style.color = options.textColor;
+    }
+    if (options.label) {
+      cellData[key].label = options.label;
+      if (cell) {
+        let labelSpan = cell.querySelector('.cell-label');
+        if (!labelSpan) {
+          labelSpan = document.createElement('span');
+          labelSpan.className = 'cell-label';
+          cell.appendChild(labelSpan);
+        }
+        labelSpan.textContent = options.label;
+        labelSpan.title = options.label;
+      }
+    }
     if (options.fontFamily) {
       cellData[key].fontFamily = options.fontFamily;
       if (cell) cell.style.fontFamily = options.fontFamily;
@@ -704,9 +668,6 @@ const calendar = (function() {
   // Public API
   return {
     render,
-    setColor,
-    setTextColor,
-    setLabel,
     setCell,
     clearCell,
     clearAll,

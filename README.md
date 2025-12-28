@@ -19,25 +19,17 @@ calendar.html?data=eJxLzy...         # Load shared calendar data
 
 Open your browser's developer console (F12 or Ctrl+Shift+j) to use these methods. All methods are on the global `calendar` object.
 
-### Basic Styling
-
-```javascript
-calendar.setColor(1, 15, '#ffcc00');      // Background (month: 1-12, day: 1-31)
-calendar.setTextColor(1, 15, '#ff0000');  // Text color
-calendar.setLabel(3, 17, 'Holiday');      // Add label
-```
-
-### Full Cell Control
+### Cell Styling
 
 ```javascript
 calendar.setCell(6, 15, {
-  color: '#e0ffe0',
-  textColor: '#006600',
-  label: 'Event',
+  color: '#e0ffe0',           // Background color
+  textColor: '#006600',       // Text color
+  label: 'Event',             // Label text
   fontFamily: 'Arial, sans-serif',
   fontSize: '1.2vmin',
-  fontWeight: 'bold',              // or '400', '700', etc.
-  fontStyle: 'italic'              // or 'normal'
+  fontWeight: 'bold',         // or '400', '700', etc.
+  fontStyle: 'italic'         // or 'normal'
 });
 ```
 
@@ -67,7 +59,7 @@ calendar.getSundays();           // [{ month: 1, day: 4 }, ...]
 calendar.getDayOfWeekDates(5);   // All Fridays (0=Sun, 6=Sat)
 
 // Highlight all Sundays
-calendar.getSundays().forEach(d => calendar.setColor(d.month, d.day, '#ffd0d0'));
+calendar.getSundays().forEach(d => calendar.setCell(d.month, d.day, { color: '#ffd0d0' }));
 ```
 
 ### Clearing
