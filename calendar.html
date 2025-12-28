@@ -36,6 +36,7 @@ SOFTWARE.
 <meta charset="utf-8">
 <title>Calendar</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
 <style>
 @import url('https://fonts.bunny.net/css?family=oswald:300,400');
 @media print {
@@ -106,9 +107,90 @@ td:empty {
 .share-btn:hover {
   background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
 }
+.help-btn {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  text-transform: none;
+  font-weight: 500;
+  font-size: 1.2em;
+}
+.help-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+.modal-overlay.show {
+  display: flex;
+}
+.modal {
+  background: white;
+  padding: 2em;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+.modal h2 {
+  margin-top: 0;
+  font-size: 1.5em;
+}
+.modal p {
+  line-height: 1.6;
+  color: #333;
+}
+.modal a {
+  color: #3b82f6;
+  text-decoration: none;
+}
+.modal a:hover {
+  text-decoration: underline;
+}
+.modal-close {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  width: 2em;
+  height: 2em;
+  background: none;
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+  color: #666;
+  line-height: 1;
+}
+.modal-close:hover {
+  color: #000;
+}
+.modal pre {
+  background: #f5f5f5;
+  padding: 1em;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.85em;
+  margin: 1em 0;
+}
+.modal code {
+  font-family: 'Consolas', 'Monaco', monospace;
+}
 @media print {
-  .share-btn {
-    display: none;
+  .share-btn, .help-btn, .modal-overlay {
+    display: none !important;
   }
 }
 .date {
@@ -150,6 +232,38 @@ td:empty {
   </thead>
   <tbody id="calendarBody"></tbody>
 </table>
+
+<div id="helpModal" class="modal-overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('helpModal').classList.remove('show')">&times;</button>
+    <h2>Calendar Help</h2>
+    <p>This is a single-page JavaScript calendar that displays all months of the year at a glance.</p>
+    <p><strong>Features:</strong></p>
+    <ul>
+      <li>Today's date is highlighted with a blue border</li>
+      <li>Weekends are shaded</li>
+      <li>Use the Share button to create a shareable URL</li>
+      <li>Customize cells via the JavaScript API in the console</li>
+    </ul>
+    <p><strong>Example:</strong></p>
+    <pre><code class="language-javascript">// Set a label and color for a date
+calendar.setCell(12, 25, {
+  color: '#fecaca',
+  label: 'Christmas',
+  borderLeftColor: '#dc2626',
+  borderLeftWidth: '3px'
+});
+
+// Highlight a date range
+calendar.setRange(7, 1, 7, 7, {
+  color: '#bbf7d0',
+  label: 'Vacation'
+});</code></pre>
+    <p>For more information, visit:<br>
+      <a href="https://github.com/brentp/single-page-js-calendar" target="_blank">github.com/brentp/single-page-js-calendar</a>
+    </p>
+  </div>
+</div>
 
 <script>
 const calendar = (function() {
@@ -272,6 +386,17 @@ const calendar = (function() {
             const url = new URL(window.location.href);
             url.search = `?data=${b64}`;
             window.location.href = url.toString();
+          };
+          cell.appendChild(btn);
+        } else if (day === 31 && month === 8) {
+          // Sep 31 doesn't exist - add Help button here
+          cell.style.borderBottom = 'none';
+          cell.style.padding = '0';
+          const btn = document.createElement('button');
+          btn.className = 'help-btn';
+          btn.textContent = 'Help (?)';
+          btn.onclick = () => {
+            document.getElementById('helpModal').classList.add('show');
           };
           cell.appendChild(btn);
         }
@@ -576,6 +701,18 @@ const calendar = (function() {
     getYear
   };
 })();
+
+// Keyboard shortcuts for help modal
+document.addEventListener('keydown', (e) => {
+  const modal = document.getElementById('helpModal');
+  if (e.key === 'Escape' && modal.classList.contains('show')) {
+    modal.classList.remove('show');
+  } else if (e.key === '?' && !modal.classList.contains('show')) {
+    modal.classList.add('show');
+  }
+});
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
 </body>
 </html>
