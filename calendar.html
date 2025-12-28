@@ -96,7 +96,7 @@ td:empty {
   width: 100%;
   height: 100%;
   cursor: pointer;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: white;
   border: none;
   border-radius: 4px;
@@ -105,13 +105,13 @@ td:empty {
   font-size: 1.2em;
 }
 .share-btn:hover {
-  background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
 }
 .help-btn {
   width: 100%;
   height: 100%;
   cursor: pointer;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
   color: white;
   border: none;
   border-radius: 4px;
@@ -120,7 +120,41 @@ td:empty {
   font-size: 1.2em;
 }
 .help-btn:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+}
+.save-btn {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  text-transform: none;
+  font-weight: 500;
+  font-size: 1.2em;
+}
+.save-btn:hover {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+}
+.save-btn:disabled {
+  background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 100%);
+  cursor: default;
+}
+.clear-btn {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  text-transform: none;
+  font-weight: 500;
+  font-size: 1.2em;
+}
+.clear-btn:hover {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
 }
 .modal-overlay {
   display: none;
@@ -189,7 +223,7 @@ td:empty {
   font-family: 'Consolas', 'Monaco', monospace;
 }
 @media print {
-  .share-btn, .help-btn, .modal-overlay {
+  .share-btn, .help-btn, .save-btn, .clear-btn, .modal-overlay {
     display: none !important;
   }
 }
@@ -279,6 +313,24 @@ const calendar = (function() {
   
   let currentYear = 2026;
   let cellData = {}; // Store custom colors/labels: { "2026-01-15": { color: "#ff0", label: "Birthday" } }
+  let isDirty = false; // Track unsaved changes
+  
+  function markDirty() {
+    isDirty = true;
+    updateSaveButtonStyle();
+  }
+  
+  function markClean() {
+    isDirty = false;
+    updateSaveButtonStyle();
+  }
+  
+  function updateSaveButtonStyle() {
+    const btn = document.getElementById('saveBtn');
+    if (btn) {
+      btn.style.fontWeight = isDirty ? 'bold' : '500';
+    }
+  }
   
   function isLeapYear(year) {
     return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
@@ -407,6 +459,35 @@ const calendar = (function() {
             document.getElementById('helpModal').classList.add('show');
           };
           cell.appendChild(btn);
+        } else if (day === 31 && month === 5) {
+          // Jun 31 doesn't exist - add Save button here
+          cell.style.borderBottom = 'none';
+          cell.style.padding = '0';
+          const btn = document.createElement('button');
+          btn.className = 'save-btn';
+          btn.id = 'saveBtn';
+          btn.textContent = 'Save';
+          btn.onclick = () => {
+            saveToLocalStorage();
+            btn.textContent = 'Saved';
+            btn.disabled = true;
+            setTimeout(() => {
+              btn.textContent = 'Save';
+              btn.disabled = false;
+            }, 2000);
+          };
+          cell.appendChild(btn);
+        } else if (day === 31 && month === 3) {
+          // Apr 31 doesn't exist - add Clear button here
+          cell.style.borderBottom = 'none';
+          cell.style.padding = '0';
+          const btn = document.createElement('button');
+          btn.className = 'clear-btn';
+          btn.textContent = 'Clear';
+          btn.onclick = () => {
+            clearAll();
+          };
+          cell.appendChild(btn);
         }
         
         row.appendChild(cell);
@@ -499,6 +580,7 @@ const calendar = (function() {
       cellData[key].borderLeftWidth = options.borderLeftWidth;
       if (cell) cell.style.borderLeftWidth = options.borderLeftWidth;
     }
+    markDirty();
   }
   
   /**
@@ -509,6 +591,7 @@ const calendar = (function() {
   function clearCell(month, day) {
     const key = dateKey(currentYear, month - 1, day);
     delete cellData[key];
+    markDirty();
     render();
   }
   
@@ -517,6 +600,7 @@ const calendar = (function() {
    */
   function clearAll() {
     cellData = {};
+    markDirty();
     render();
   }
   
@@ -649,6 +733,57 @@ const calendar = (function() {
   }
   
   /**
+   * Save current calendar data to localStorage
+   * @param {string} [name='calendarData'] - Storage key name
+   */
+  function saveToLocalStorage(name) {
+    const key = name || 'calendarData';
+    const data = exportJSONData();
+    localStorage.setItem(key, JSON.stringify(data));
+    markClean();
+  }
+  
+  /**
+   * Load calendar data from localStorage
+   * @param {string} [name='calendarData'] - Storage key name
+   * @param {boolean} [merge=false] - If true, merge with current data instead of replacing
+   * @returns {boolean} True if data was loaded
+   */
+  function loadFromLocalStorage(name, merge) {
+    const key = name || 'calendarData';
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      try {
+        const data = JSON.parse(stored);
+        if (merge) {
+          // Merge: keep current year unless not set, combine cells
+          if (data.cells) {
+            cellData = { ...cellData, ...data.cells };
+          }
+        } else {
+          // Replace
+          if (data.year) currentYear = data.year;
+          cellData = data.cells || {};
+        }
+        render();
+        return true;
+      } catch (e) {
+        console.error('Failed to parse localStorage data:', e);
+      }
+    }
+    return false;
+  }
+  
+  /**
+   * Clear localStorage data
+   * @param {string} [name='calendarData'] - Storage key name
+   */
+  function clearLocalStorage(name) {
+    const key = name || 'calendarData';
+    localStorage.removeItem(key);
+  }
+  
+  /**
    * Decode base64 compressed data param
    * @param {string} b64 - Base64 encoded compressed data
    * @returns {Promise<object>} Parsed data object
@@ -665,7 +800,7 @@ const calendar = (function() {
     return JSON.parse(json);
   }
   
-  // Initialize with URL params
+  // Initialize with URL params or localStorage
   const urlParams = new URLSearchParams(window.location.search);
   const yearParam = urlParams.get('year');
   const dataParam = urlParams.get('data');
@@ -682,6 +817,20 @@ const calendar = (function() {
     // Render will be called after async decode
     document.addEventListener('DOMContentLoaded', () => {});
   } else {
+    // Try loading from localStorage first (don't render yet, wait for DOM)
+    const key = 'calendarData';
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      try {
+        const data = JSON.parse(stored);
+        if (data.year) currentYear = data.year;
+        cellData = data.cells || {};
+      } catch (e) {
+        console.error('Failed to parse localStorage data:', e);
+      }
+    }
+    
+    // Year param overrides localStorage year
     if (yearParam) {
       currentYear = parseInt(yearParam, 10);
     }
@@ -702,7 +851,10 @@ const calendar = (function() {
     importJSONData,
     exportData,
     importData,
-    getYear
+    getYear,
+    saveToLocalStorage,
+    loadFromLocalStorage,
+    clearLocalStorage
   };
 })();
 

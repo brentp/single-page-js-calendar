@@ -104,6 +104,28 @@ For heavily customized calendars that exceed URL limits, save the JavaScript ins
 // Copy this output and paste it into the console to restore
 console.log(`calendar.importJSONData(${JSON.stringify(calendar.exportJSONData())});`);
 ```
+
+### Local Storage
+
+The **Save** button persists your calendar to the browser's localStorage. Data is automatically loaded on page refresh. The Save button appears **bold** when there are unsaved changes.
+
+The **Clear** button removes all customizations from the current calendar.
+
+```javascript
+// Save/load with default key
+calendar.saveToLocalStorage();
+calendar.loadFromLocalStorage();
+
+// Save/load with custom name (for multiple calendars)
+calendar.saveToLocalStorage('work-calendar');
+calendar.loadFromLocalStorage('work-calendar');
+
+// Merge stored data with current calendar (keeps current year, combines cells)
+calendar.loadFromLocalStorage('holidays', true);
+
+// Clear stored data
+calendar.clearLocalStorage();
+calendar.clearLocalStorage('work-calendar');
 ```
 
 ### Year Control
