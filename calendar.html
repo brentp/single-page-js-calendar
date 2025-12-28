@@ -399,9 +399,14 @@ const calendar = (function() {
   
   /**
    * Export current cell data as JSON
-   * @returns {string} JSON string
+   * @param {boolean} base64 - If true, return base64-encoded string
+   * @returns {string} JSON string or base64-encoded JSON
    */
-  function exportData() {
+  function exportData(base64) {
+    const json = JSON.stringify({ year: currentYear, cells: cellData });
+    if (base64) {
+      return btoa(encodeURIComponent(json));
+    }
     return JSON.stringify({ year: currentYear, cells: cellData }, null, 2);
   }
   
@@ -424,10 +429,21 @@ const calendar = (function() {
     return currentYear;
   }
   
-  // Initialize with URL param or current year
+  // Initialize with URL params
   const urlParams = new URLSearchParams(window.location.search);
   const yearParam = urlParams.get('year');
-  if (yearParam) {
+  const dataParam = urlParams.get('data');
+  
+  if (dataParam) {
+    try {
+      const json = decodeURIComponent(atob(dataParam));
+      const data = JSON.parse(json);
+      currentYear = data.year;
+      cellData = data.cells || {};
+    } catch (e) {
+      console.error('Failed to parse data parameter:', e);
+    }
+  } else if (yearParam) {
     currentYear = parseInt(yearParam, 10);
   }
   

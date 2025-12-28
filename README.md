@@ -133,7 +133,20 @@ localStorage.setItem('myCalendar', data);
 // Import previously saved data
 const saved = localStorage.getItem('myCalendar');
 if (saved) calendar.importData(saved);
+
+// Export as base64 for URL sharing
+const b64 = calendar.exportData(true);
+const shareUrl = `calendar.html?data=${b64}`;
 ```
+
+### URL Parameters
+
+```
+calendar.html?year=2027           # Show specific year
+calendar.html?data=eyJ5ZWFy...    # Load base64-encoded data
+```
+
+The `data` parameter takes priority over `year` if both are present.
 
 ### Year Control
 
