@@ -25,12 +25,15 @@ Open your browser's developer console (F12 or Ctrl+Shift+j) to use these methods
 calendar.setCell(6, 15, {
   color: '#e0ffe0',           // Background color
   textColor: '#006600',       // Text color
-  label: 'Event',             // Label text
+  label: '<b>Event</b><br>other line',             // Label text (supports HTML)
   fontFamily: 'Arial, sans-serif',
   fontSize: '1.2vmin',
   fontWeight: 'bold',         // or '400', '700', etc.
   fontStyle: 'italic'         // or 'normal'
 });
+
+// Labels support HTML
+calendar.setCell(12, 25, { label: '<b>Christmas</b>' });
 ```
 
 ### Borders
