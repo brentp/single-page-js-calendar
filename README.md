@@ -94,6 +94,18 @@ calendar.exportData(true).then(b64 => {
 });
 ```
 
+### Sharing
+
+The **Share** button creates a URL with your calendar data encoded in the query string. This works well for calendars with moderate customization, but browsers have URL length limits (typically 2,000-8,000 characters depending on the browser).
+
+For heavily customized calendars that exceed URL limits, save the JavaScript instead:
+
+```javascript
+// Copy this output and paste it into the console to restore
+console.log(`calendar.importJSONData(${JSON.stringify(calendar.exportJSONData())});`);
+```
+```
+
 ### Year Control
 
 ```javascript

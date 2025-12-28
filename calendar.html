@@ -240,8 +240,7 @@ td:empty {
 <div id="helpModal" class="modal-overlay">
   <div class="modal">
     <button class="modal-close" onclick="document.getElementById('helpModal').classList.remove('show')">&times;</button>
-    <h2>Calendar Help</h2>
-    <p>This is a single-page JavaScript calendar that displays all months of the year at a glance.</p>
+    <p>Single-page, full-year JavaScript calendar</p>
     <p><strong>Features:</strong></p>
     <ul>
       <li>Today's date is highlighted with a blue border</li>
@@ -255,14 +254,18 @@ calendar.setCell(12, 25, {
   color: '#fecaca',
   label: '&lt;b&gt;Christmas&lt;/b&gt;',  // HTML supported
   borderLeftColor: '#dc2626',
-  borderLeftWidth: '3px'
-});
+  borderLeftWidth: '3px',
+  borderBottomColor: '#dc2626'});
 
 // Highlight a date range
 calendar.setRange(7, 1, 7, 7, {
   color: '#bbf7d0',
-  label: 'Vacation'
-});</code></pre>
+  label: 'Vacation'});
+
+// Highlight All Fridays (0=Sun, 6=Sat)
+calendar.getDayOfWeekDates(5)
+    .forEach(d => calendar.setCell(d.month, d.day, { color: '#ffd0d0' }));
+</code></pre>
     <p>For more information, visit:<br>
       <a href="https://github.com/brentp/single-page-js-calendar" target="_blank">github.com/brentp/single-page-js-calendar</a>
     </p>
@@ -621,7 +624,8 @@ const calendar = (function() {
       return compress(json).then(bytes => {
         let binary = '';
         bytes.forEach(b => binary += String.fromCharCode(b));
-        return btoa(binary);
+        // Use URL-safe base64: replace + with - and / with _
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_');
       });
     }
     return JSON.stringify(data, null, 2);
@@ -650,7 +654,9 @@ const calendar = (function() {
    * @returns {Promise<object>} Parsed data object
    */
   async function decodeDataParam(b64) {
-    const binary = atob(b64);
+    // Convert URL-safe base64 back to standard base64
+    const standardB64 = b64.replace(/-/g, '+').replace(/_/g, '/');
+    const binary = atob(standardB64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
       bytes[i] = binary.charCodeAt(i);
