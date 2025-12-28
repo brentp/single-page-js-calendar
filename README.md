@@ -59,6 +59,19 @@ calendar.setCell(1, 3, { fontWeight: 'bold' });    // or '400', '700', etc.
 calendar.setCell(1, 4, { fontStyle: 'italic' });   // or 'normal'
 ```
 
+### Border Styling
+
+```javascript
+// Set the underline (border-bottom) color and width
+calendar.setCell(1, 15, { borderColor: '#ff0000', borderWidth: '3px' });
+
+// Use with ranges to mark periods
+calendar.highlightRange(6, 1, 6, 14, {
+  borderColor: '#0066cc',
+  borderWidth: '2px'
+});
+```
+
 ### Clearing
 
 ```javascript
