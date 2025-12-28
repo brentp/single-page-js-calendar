@@ -610,12 +610,31 @@ const calendar = (function() {
   }
   
   /**
+   * Export current cell data as a JavaScript object
+   * @returns {object} Object with year and cells properties
+   */
+  function exportJSONData() {
+    return { year: currentYear, cells: { ...cellData } };
+  }
+  
+  /**
+   * Import cell data from a JavaScript object
+   * @param {object} data - Object with year and cells properties
+   */
+  function importJSONData(data) {
+    if (data.year) currentYear = data.year;
+    cellData = data.cells || {};
+    render();
+  }
+  
+  /**
    * Export current cell data as JSON
    * @param {boolean} base64 - If true, return compressed base64-encoded string (async)
    * @returns {string|Promise<string>} JSON string or Promise resolving to compressed base64
    */
   function exportData(base64) {
-    const json = JSON.stringify({ year: currentYear, cells: cellData });
+    const data = exportJSONData();
+    const json = JSON.stringify(data);
     if (base64) {
       return compress(json).then(bytes => {
         let binary = '';
@@ -623,7 +642,7 @@ const calendar = (function() {
         return btoa(binary);
       });
     }
-    return JSON.stringify({ year: currentYear, cells: cellData }, null, 2);
+    return JSON.stringify(data, null, 2);
   }
   
   /**
@@ -632,9 +651,7 @@ const calendar = (function() {
    */
   function importData(json) {
     const data = JSON.parse(json);
-    currentYear = data.year;
-    cellData = data.cells || {};
-    render();
+    importJSONData(data);
   }
   
   /**
@@ -696,6 +713,8 @@ const calendar = (function() {
     setRange,
     getSundays,
     getDayOfWeekDates,
+    exportJSONData,
+    importJSONData,
     exportData,
     importData,
     getYear

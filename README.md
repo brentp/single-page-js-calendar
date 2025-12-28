@@ -80,9 +80,18 @@ calendar.clearAll();        // All customizations
 ### Import/Export
 
 ```javascript
-// JSON export
-const data = calendar.exportData();
-calendar.importData(data);
+// JSON string export/import
+const jsonString = calendar.exportData();
+calendar.importData(jsonString);
+```
+
+**NOTE** below can be a nice way to save/share modifiable data.
+
+// Raw JavaScript object (no serialization)
+const data = calendar.exportJSONData();
+calendar.importJSONData({
+    year: 2026, cells: { "2026-01-15": { color: "#ffcc00", label: "Event" }, ... } 
+})
 
 // Compressed base64 for URL sharing
 calendar.exportData(true).then(b64 => {
