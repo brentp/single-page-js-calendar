@@ -50,6 +50,9 @@ SOFTWARE.
   .weekend {
     background: #d8d8d8 !important;
   }
+  .today {
+    box-shadow: none !important;
+  }
 }
 html {
   font-family: 'Oswald';
@@ -122,6 +125,9 @@ td:empty {
   background: #eee;
   font-weight: 400;
 }
+.today {
+  box-shadow: inset 0 0 0 2px #3b82f6;
+}
 .cell-label {
   font-size: 0.8em;
   color: #555;
@@ -191,6 +197,10 @@ const calendar = (function() {
     const tbody = document.getElementById('calendarBody');
     tbody.innerHTML = '';
     
+    // Get today's date for comparison
+    const now = new Date();
+    const todayKey = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
+    
     for (let day = 1; day <= 31; day++) {
       const row = document.createElement('tr');
       
@@ -201,6 +211,11 @@ const calendar = (function() {
         if (day <= daysInMonth) {
           const key = dateKey(currentYear, month, day);
           cell.setAttribute('data-date', key);
+          
+          // Mark today's date
+          if (key === todayKey) {
+            cell.classList.add('today');
+          }
           
           const dow = getDayOfWeek(currentYear, month, day);
           if (isWeekend(currentYear, month, day)) {
@@ -216,8 +231,13 @@ const calendar = (function() {
             if (data.fontSize) cell.style.fontSize = data.fontSize;
             if (data.fontWeight) cell.style.fontWeight = data.fontWeight;
             if (data.fontStyle) cell.style.fontStyle = data.fontStyle;
-            if (data.borderColor) cell.style.borderBottomColor = data.borderColor;
-            if (data.borderWidth) cell.style.borderBottomWidth = data.borderWidth;
+            if (data.borderBottomColor) cell.style.borderBottomColor = data.borderBottomColor;
+            if (data.borderBottomWidth) cell.style.borderBottomWidth = data.borderBottomWidth;
+            if (data.borderLeftColor) {
+              cell.style.borderLeftColor = data.borderLeftColor;
+              cell.style.borderLeftStyle = 'solid';
+            }
+            if (data.borderLeftWidth) cell.style.borderLeftWidth = data.borderLeftWidth;
           }
           
           const dateSpan = document.createElement('span');
@@ -320,11 +340,11 @@ const calendar = (function() {
   }
   
   /**
-   * Set both color and label for a date
-   * @param {number} month - Month (1-12)
-   * @param {number} day - Day of month (1-31)
-   * @param {object} options - { color, textColor, label, fontFamily, fontSize, fontWeight, fontStyle, borderColor, borderWidth }
-   */
+    * Set both color and label for a date
+    * @param {number} month - Month (1-12)
+    * @param {number} day - Day of month (1-31)
+    * @param {object} options - { color, textColor, label, fontFamily, fontSize, fontWeight, fontStyle, borderBottomColor, borderBottomWidth, borderLeftColor, borderLeftWidth }
+    */
   function setCell(month, day, options) {
     const key = dateKey(currentYear, month - 1, day);
     if (!cellData[key]) cellData[key] = {};
@@ -350,13 +370,24 @@ const calendar = (function() {
       cellData[key].fontStyle = options.fontStyle;
       if (cell) cell.style.fontStyle = options.fontStyle;
     }
-    if (options.borderColor) {
-      cellData[key].borderColor = options.borderColor;
-      if (cell) cell.style.borderBottomColor = options.borderColor;
+    if (options.borderBottomColor) {
+      cellData[key].borderBottomColor = options.borderBottomColor;
+      if (cell) cell.style.borderBottomColor = options.borderBottomColor;
     }
-    if (options.borderWidth) {
-      cellData[key].borderWidth = options.borderWidth;
-      if (cell) cell.style.borderBottomWidth = options.borderWidth;
+    if (options.borderBottomWidth) {
+      cellData[key].borderBottomWidth = options.borderBottomWidth;
+      if (cell) cell.style.borderBottomWidth = options.borderBottomWidth;
+    }
+    if (options.borderLeftColor) {
+      cellData[key].borderLeftColor = options.borderLeftColor;
+      if (cell) {
+        cell.style.borderLeftColor = options.borderLeftColor;
+        cell.style.borderLeftStyle = 'solid';
+      }
+    }
+    if (options.borderLeftWidth) {
+      cellData[key].borderLeftWidth = options.borderLeftWidth;
+      if (cell) cell.style.borderLeftWidth = options.borderLeftWidth;
     }
   }
   
@@ -387,7 +418,7 @@ const calendar = (function() {
    * @param {number} endDay - End day
    * @param {object} options - { color, textColor, label }
    */
-  function highlightRange(startMonth, startDay, endMonth, endDay, options) {
+  function setRange(startMonth, startDay, endMonth, endDay, options) {
     const start = new Date(currentYear, startMonth - 1, startDay);
     const end = new Date(currentYear, endMonth - 1, endDay);
     
@@ -537,7 +568,7 @@ const calendar = (function() {
     setCell,
     clearCell,
     clearAll,
-    highlightRange,
+    setRange,
     getSundays,
     getDayOfWeekDates,
     exportData,

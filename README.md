@@ -1,163 +1,98 @@
 # Single-Page Calendar
 
-A printable single-page year calendar with a JavaScript API for customizing cells.
-This was very much inspired by https://neatnik.net/calendar/?year=2026 but adds the javascript API along 
-with import/export
+A printable single-page year calendar with a JavaScript API for customizing cells. Supports import/export and URL sharing.
+
+Inspired by [neatnik.net/calendar](https://neatnik.net/calendar/?year=2026).
 
 ## Usage
 
-Open `calendar.html` in a browser. By default it shows 2026.
+Open `calendar.html` in a browser or use the [hosted version](https://brentp.github.io/single-page-js-calendar/calendar.html).
 
-To show a different year, use the URL parameter:
 ```
-calendar.html?year=2027
+calendar.html?year=2027              # Show specific year
+calendar.html?data=eJxLzy...         # Load shared calendar data
 ```
 
-For printing, use landscape orientation and disable headers/footers. The calendar scales to fill any paper size.
+**Printing:** Use landscape orientation, disable headers/footers. Scales to any paper size.
 
 ## JavaScript API
 
-All methods are available on the global `calendar` object.
+Open your browser's developer console (F12 or Ctrl+Shift+j) to use these methods. All methods are on the global `calendar` object.
 
-### Setting Colors
+### Basic Styling
 
 ```javascript
-// Set background color (month: 1-12, day: 1-31)
-calendar.setColor(1, 15, '#ffcc00');
-
-// Set text color
-calendar.setTextColor(1, 15, '#ff0000');
+calendar.setColor(1, 15, '#ffcc00');      // Background (month: 1-12, day: 1-31)
+calendar.setTextColor(1, 15, '#ff0000');  // Text color
+calendar.setLabel(3, 17, 'Holiday');      // Add label
 ```
 
-### Setting Labels
+### Full Cell Control
 
 ```javascript
-// Add a label to a date
-calendar.setLabel(3, 17, 'Holiday');
-```
-
-### Combined Updates
-
-```javascript
-// Set multiple properties at once
 calendar.setCell(6, 15, {
   color: '#e0ffe0',
   textColor: '#006600',
   label: 'Event',
   fontFamily: 'Arial, sans-serif',
   fontSize: '1.2vmin',
-  fontWeight: 'bold',
-  fontStyle: 'italic'
+  fontWeight: 'bold',              // or '400', '700', etc.
+  fontStyle: 'italic'              // or 'normal'
 });
 ```
 
-### Font Styling
+### Borders
 
 ```javascript
-// Available font options
-calendar.setCell(1, 1, { fontFamily: 'Georgia, serif' });
-calendar.setCell(1, 2, { fontSize: '1.5vmin' });
-calendar.setCell(1, 3, { fontWeight: 'bold' });    // or '400', '700', etc.
-calendar.setCell(1, 4, { fontStyle: 'italic' });   // or 'normal'
-```
+// Bottom border (underline)
+calendar.setCell(1, 15, { borderBottomColor: '#ff0000', borderBottomWidth: '3px' });
 
-### Border Styling
+// Left border (mark start of periods)
+calendar.setCell(6, 1, { borderLeftColor: '#0066cc', borderLeftWidth: '4px' });
 
-```javascript
-// Set the underline (border-bottom) color and width
-calendar.setCell(1, 15, { borderColor: '#ff0000', borderWidth: '3px' });
-
-// Use with ranges to mark periods
-calendar.highlightRange(6, 1, 6, 14, {
-  borderColor: '#0066cc',
-  borderWidth: '2px'
-});
-```
-
-### Clearing
-
-```javascript
-// Clear a single cell
-calendar.clearCell(1, 15);
-
-// Clear all customizations
-calendar.clearAll();
+// Combine with ranges
+calendar.setRange(6, 1, 6, 14, { borderBottomColor: '#0066cc', borderBottomWidth: '2px' });
 ```
 
 ### Date Ranges
 
 ```javascript
-// Highlight a range of dates
-calendar.highlightRange(6, 1, 6, 14, {
-  color: '#ffe0e0',
-  label: 'Vacation'
-});
+calendar.setRange(6, 1, 6, 14, { color: '#ffe0e0', label: 'Vacation' });
 ```
 
 ### Finding Dates
 
 ```javascript
-// Get all Sundays
-calendar.getSundays();
-// Returns: [{ month: 1, day: 4 }, { month: 1, day: 11 }, ...]
+calendar.getSundays();           // [{ month: 1, day: 4 }, ...]
+calendar.getDayOfWeekDates(5);   // All Fridays (0=Sun, 6=Sat)
 
-// Get all dates for a specific day of week (0=Sun, 1=Mon, ..., 6=Sat)
-calendar.getDayOfWeekDates(5); // All Fridays
+// Highlight all Sundays
+calendar.getSundays().forEach(d => calendar.setColor(d.month, d.day, '#ffd0d0'));
 ```
 
-### Examples
+### Clearing
 
 ```javascript
-// Highlight all Sundays in red
-calendar.getSundays().forEach(d => {
-  calendar.setColor(d.month, d.day, '#ffd0d0');
-});
-
-// Highlight all Fridays in green
-calendar.getDayOfWeekDates(5).forEach(d => {
-  calendar.setColor(d.month, d.day, '#d0ffd0');
-});
-
-// Mark a birthday
-calendar.setCell(7, 20, {
-  color: '#fffacd',
-  label: 'Birthday'
-});
+calendar.clearCell(1, 15);  // Single cell
+calendar.clearAll();        // All customizations
 ```
 
-### Persistence
+### Import/Export
 
 ```javascript
-// Export all customizations as JSON
+// JSON export
 const data = calendar.exportData();
-localStorage.setItem('myCalendar', data);
+calendar.importData(data);
 
-// Import previously saved data
-const saved = localStorage.getItem('myCalendar');
-if (saved) calendar.importData(saved);
-
-// Export as compressed base64 for URL sharing (async)
+// Compressed base64 for URL sharing
 calendar.exportData(true).then(b64 => {
-  const shareUrl = `calendar.html?data=${b64}`;
-  console.log(shareUrl);
+  console.log(`calendar.html?data=${b64}`);
 });
 ```
-
-### URL Parameters
-
-```
-calendar.html?year=2027           # Show specific year
-calendar.html?data=eJxLzy...      # Load compressed base64 data
-```
-
-The `data` parameter uses deflate compression for shorter URLs. It takes priority over `year` if both are present.
 
 ### Year Control
 
 ```javascript
-// Render a different year
-calendar.render(2027);
-
-// Get current year
-calendar.getYear(); // 2027
+calendar.render(2027);   // Render different year
+calendar.getYear();      // Get current year
 ```
