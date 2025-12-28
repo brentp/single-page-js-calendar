@@ -41,8 +41,22 @@ calendar.setLabel(3, 17, 'Holiday');
 calendar.setCell(6, 15, {
   color: '#e0ffe0',
   textColor: '#006600',
-  label: 'Event'
+  label: 'Event',
+  fontFamily: 'Arial, sans-serif',
+  fontSize: '1.2vmin',
+  fontWeight: 'bold',
+  fontStyle: 'italic'
 });
+```
+
+### Font Styling
+
+```javascript
+// Available font options
+calendar.setCell(1, 1, { fontFamily: 'Georgia, serif' });
+calendar.setCell(1, 2, { fontSize: '1.5vmin' });
+calendar.setCell(1, 3, { fontWeight: 'bold' });    // or '400', '700', etc.
+calendar.setCell(1, 4, { fontStyle: 'italic' });   // or 'normal'
 ```
 
 ### Clearing

@@ -46,6 +46,9 @@ td, th {
   color: #000;
   overflow: hidden;
   white-space: nowrap;
+  line-height: 1;
+  height: calc(100% / 32);
+  max-height: calc(100% / 32);
 }
 th {
   font-size: 1.1vmin;
@@ -71,6 +74,7 @@ td:empty {
   font-size: 0.8em;
   color: #555;
   margin-left: 0.3em;
+  text-transform: none;
 }
 * {
   color-adjust: exact;
@@ -154,12 +158,12 @@ const calendar = (function() {
           // Apply stored customizations
           const data = cellData[key];
           if (data) {
-            if (data.color) {
-              cell.style.backgroundColor = data.color;
-            }
-            if (data.textColor) {
-              cell.style.color = data.textColor;
-            }
+            if (data.color) cell.style.backgroundColor = data.color;
+            if (data.textColor) cell.style.color = data.textColor;
+            if (data.fontFamily) cell.style.fontFamily = data.fontFamily;
+            if (data.fontSize) cell.style.fontSize = data.fontSize;
+            if (data.fontWeight) cell.style.fontWeight = data.fontWeight;
+            if (data.fontStyle) cell.style.fontStyle = data.fontStyle;
           }
           
           const dateSpan = document.createElement('span');
@@ -251,12 +255,33 @@ const calendar = (function() {
    * Set both color and label for a date
    * @param {number} month - Month (1-12)
    * @param {number} day - Day of month (1-31)
-   * @param {object} options - { color, textColor, label }
+   * @param {object} options - { color, textColor, label, fontFamily, fontSize, fontWeight, fontStyle }
    */
   function setCell(month, day, options) {
+    const key = dateKey(currentYear, month - 1, day);
+    if (!cellData[key]) cellData[key] = {};
+    
     if (options.color) setColor(month, day, options.color);
     if (options.textColor) setTextColor(month, day, options.textColor);
     if (options.label) setLabel(month, day, options.label);
+    
+    const cell = getCell(month - 1, day);
+    if (options.fontFamily) {
+      cellData[key].fontFamily = options.fontFamily;
+      if (cell) cell.style.fontFamily = options.fontFamily;
+    }
+    if (options.fontSize) {
+      cellData[key].fontSize = options.fontSize;
+      if (cell) cell.style.fontSize = options.fontSize;
+    }
+    if (options.fontWeight) {
+      cellData[key].fontWeight = options.fontWeight;
+      if (cell) cell.style.fontWeight = options.fontWeight;
+    }
+    if (options.fontStyle) {
+      cellData[key].fontStyle = options.fontStyle;
+      if (cell) cell.style.fontStyle = options.fontStyle;
+    }
   }
   
   /**
