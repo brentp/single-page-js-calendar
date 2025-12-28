@@ -88,6 +88,26 @@ th {
 td:empty {
   border: 0;
 }
+.share-btn {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  text-transform: none;
+  font-weight: 500;
+  font-size: 1.2em;
+}
+.share-btn:hover {
+  background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+}
+@media print {
+  .share-btn {
+    display: none;
+  }
+}
 .date {
   display: inline-block;
   width: 1.1em;
@@ -220,6 +240,20 @@ const calendar = (function() {
             labelSpan.title = data.label;
             cell.appendChild(labelSpan);
           }
+        } else if (day === 31 && month === 10) {
+          // Nov 31 doesn't exist - add Share button here
+          cell.style.borderBottom = 'none';
+          cell.style.padding = '0';
+          const btn = document.createElement('button');
+          btn.className = 'share-btn';
+          btn.textContent = 'Share';
+          btn.onclick = async () => {
+            const b64 = await exportData(true);
+            const url = new URL(window.location.href);
+            url.search = `?data=${b64}`;
+            window.location.href = url.toString();
+          };
+          cell.appendChild(btn);
         }
         
         row.appendChild(cell);
@@ -398,14 +432,40 @@ const calendar = (function() {
   }
   
   /**
+   * Compress a string using deflate
+   * @param {string} str - String to compress
+   * @returns {Promise<Uint8Array>} Compressed bytes
+   */
+  async function compress(str) {
+    const stream = new Blob([str]).stream();
+    const compressed = stream.pipeThrough(new CompressionStream('deflate'));
+    return new Uint8Array(await new Response(compressed).arrayBuffer());
+  }
+  
+  /**
+   * Decompress deflate-compressed bytes
+   * @param {Uint8Array} bytes - Compressed bytes
+   * @returns {Promise<string>} Decompressed string
+   */
+  async function decompress(bytes) {
+    const stream = new Blob([bytes]).stream();
+    const decompressed = stream.pipeThrough(new DecompressionStream('deflate'));
+    return new Response(decompressed).text();
+  }
+  
+  /**
    * Export current cell data as JSON
-   * @param {boolean} base64 - If true, return base64-encoded string
-   * @returns {string} JSON string or base64-encoded JSON
+   * @param {boolean} base64 - If true, return compressed base64-encoded string (async)
+   * @returns {string|Promise<string>} JSON string or Promise resolving to compressed base64
    */
   function exportData(base64) {
     const json = JSON.stringify({ year: currentYear, cells: cellData });
     if (base64) {
-      return btoa(encodeURIComponent(json));
+      return compress(json).then(bytes => {
+        let binary = '';
+        bytes.forEach(b => binary += String.fromCharCode(b));
+        return btoa(binary);
+      });
     }
     return JSON.stringify({ year: currentYear, cells: cellData }, null, 2);
   }
@@ -429,26 +489,44 @@ const calendar = (function() {
     return currentYear;
   }
   
+  /**
+   * Decode base64 compressed data param
+   * @param {string} b64 - Base64 encoded compressed data
+   * @returns {Promise<object>} Parsed data object
+   */
+  async function decodeDataParam(b64) {
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const json = await decompress(bytes);
+    return JSON.parse(json);
+  }
+  
   // Initialize with URL params
   const urlParams = new URLSearchParams(window.location.search);
   const yearParam = urlParams.get('year');
   const dataParam = urlParams.get('data');
   
   if (dataParam) {
-    try {
-      const json = decodeURIComponent(atob(dataParam));
-      const data = JSON.parse(json);
+    decodeDataParam(dataParam).then(data => {
       currentYear = data.year;
       cellData = data.cells || {};
-    } catch (e) {
+      render();
+    }).catch(e => {
       console.error('Failed to parse data parameter:', e);
+      render();
+    });
+    // Render will be called after async decode
+    document.addEventListener('DOMContentLoaded', () => {});
+  } else {
+    if (yearParam) {
+      currentYear = parseInt(yearParam, 10);
     }
-  } else if (yearParam) {
-    currentYear = parseInt(yearParam, 10);
+    // Initial render on load
+    document.addEventListener('DOMContentLoaded', () => render());
   }
-  
-  // Initial render on load
-  document.addEventListener('DOMContentLoaded', () => render());
   
   // Public API
   return {

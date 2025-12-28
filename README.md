@@ -1,6 +1,8 @@
 # Single-Page Calendar
 
 A printable single-page year calendar with a JavaScript API for customizing cells.
+This was very much inspired by https://neatnik.net/calendar/?year=2026 but adds the javascript API along 
+with import/export
 
 ## Usage
 
@@ -134,19 +136,21 @@ localStorage.setItem('myCalendar', data);
 const saved = localStorage.getItem('myCalendar');
 if (saved) calendar.importData(saved);
 
-// Export as base64 for URL sharing
-const b64 = calendar.exportData(true);
-const shareUrl = `calendar.html?data=${b64}`;
+// Export as compressed base64 for URL sharing (async)
+calendar.exportData(true).then(b64 => {
+  const shareUrl = `calendar.html?data=${b64}`;
+  console.log(shareUrl);
+});
 ```
 
 ### URL Parameters
 
 ```
 calendar.html?year=2027           # Show specific year
-calendar.html?data=eyJ5ZWFy...    # Load base64-encoded data
+calendar.html?data=eJxLzy...      # Load compressed base64 data
 ```
 
-The `data` parameter takes priority over `year` if both are present.
+The `data` parameter uses deflate compression for shorter URLs. It takes priority over `year` if both are present.
 
 ### Year Control
 
