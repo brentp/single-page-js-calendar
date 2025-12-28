@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Calendar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+@import url('https://fonts.bunny.net/css?family=oswald:300,400');
+@media print {
+  @page {
+    size: auto;
+    margin: 0;
+  }
+  html, body {
+    width: 100%;
+    height: 100%;
+  }
+  .weekend {
+    background: #d8d8d8 !important;
+  }
+}
+html {
+  font-family: 'Oswald';
+}
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+table {
+  width: 100%;
+  height: 100%;
+  border-collapse: separate;
+  border-spacing: .5em 0;
+  table-layout: fixed;
+}
+td, th {
+  font-weight: normal;
+  text-transform: uppercase;
+  border-bottom: 1px solid #888;
+  padding: 0 .3vmin;
+  font-size: .9vmin;
+  font-weight: 300;
+  color: #000;
+  overflow: hidden;
+  white-space: nowrap;
+}
+th {
+  font-size: 1.1vmin;
+}
+td:empty {
+  border: 0;
+}
+.date {
+  display: inline-block;
+  width: 1.1em;
+}
+.day {
+  display: inline-block;
+  text-align: center;
+  width: 1em;
+  color: #888;
+}
+.weekend {
+  background: #eee;
+  font-weight: 400;
+}
+.cell-label {
+  font-size: 0.8em;
+  color: #555;
+  margin-left: 0.3em;
+}
+* {
+  color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+</style>
+</head>
+<body>
+<table id="calendarTable">
+  <thead>
+    <tr>
+      <th id="yearHeader"></th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th>
+      <th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+    </tr>
+  </thead>
+  <tbody id="calendarBody"></tbody>
+</table>
+
+<script>
+const calendar = (function() {
+  const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  const monthDays = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  
+  let currentYear = 2026;
+  let cellData = {}; // Store custom colors/labels: { "2026-01-15": { color: "#ff0", label: "Birthday" } }
+  
+  function isLeapYear(year) {
+    return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+  }
+  
+  function getDaysInMonth(year, month) {
+    if (month === 1 && isLeapYear(year)) return 29;
+    return monthDays[month];
+  }
+  
+  function getDayOfWeek(year, month, day) {
+    return new Date(year, month, day).getDay();
+  }
+  
+  function isWeekend(year, month, day) {
+    const dow = getDayOfWeek(year, month, day);
+    return dow === 0 || dow === 6;
+  }
+  
+  function dateKey(year, month, day) {
+    const m = String(month + 1).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    return `${year}-${m}-${d}`;
+  }
+  
+  function getCell(month, day) {
+    const key = dateKey(currentYear, month, day);
+    const cell = document.querySelector(`td[data-date="${key}"]`);
+    return cell;
+  }
+  
+  function render(year) {
+    if (year) currentYear = year;
+    
+    document.getElementById('yearHeader').textContent = currentYear + ' Jan';
+    
+    const tbody = document.getElementById('calendarBody');
+    tbody.innerHTML = '';
+    
+    for (let day = 1; day <= 31; day++) {
+      const row = document.createElement('tr');
+      
+      for (let month = 0; month < 12; month++) {
+        const cell = document.createElement('td');
+        const daysInMonth = getDaysInMonth(currentYear, month);
+        
+        if (day <= daysInMonth) {
+          const key = dateKey(currentYear, month, day);
+          cell.setAttribute('data-date', key);
+          
+          const dow = getDayOfWeek(currentYear, month, day);
+          if (isWeekend(currentYear, month, day)) {
+            cell.classList.add('weekend');
+          }
+          
+          // Apply stored customizations
+          const data = cellData[key];
+          if (data) {
+            if (data.color) {
+              cell.style.backgroundColor = data.color;
+            }
+            if (data.textColor) {
+              cell.style.color = data.textColor;
+            }
+          }
+          
+          const dateSpan = document.createElement('span');
+          dateSpan.className = 'date';
+          dateSpan.textContent = day;
+          
+          const daySpan = document.createElement('span');
+          daySpan.className = 'day';
+          daySpan.textContent = dayNames[dow];
+          
+          cell.appendChild(dateSpan);
+          cell.appendChild(document.createTextNode(' '));
+          cell.appendChild(daySpan);
+          
+          // Add label if exists
+          if (data && data.label) {
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'cell-label';
+            labelSpan.textContent = data.label;
+            labelSpan.title = data.label;
+            cell.appendChild(labelSpan);
+          }
+        }
+        
+        row.appendChild(cell);
+      }
+      
+      tbody.appendChild(row);
+    }
+  }
+  
+  // API Methods
+  
+  /**
+   * Set the background color for a specific date
+   * @param {number} month - Month (1-12)
+   * @param {number} day - Day of month (1-31)
+   * @param {string} color - CSS color value
+   */
+  function setColor(month, day, color) {
+    const key = dateKey(currentYear, month - 1, day);
+    if (!cellData[key]) cellData[key] = {};
+    cellData[key].color = color;
+    
+    const cell = getCell(month - 1, day);
+    if (cell) cell.style.backgroundColor = color;
+  }
+  
+  /**
+   * Set the text color for a specific date
+   * @param {number} month - Month (1-12)
+   * @param {number} day - Day of month (1-31)
+   * @param {string} color - CSS color value
+   */
+  function setTextColor(month, day, color) {
+    const key = dateKey(currentYear, month - 1, day);
+    if (!cellData[key]) cellData[key] = {};
+    cellData[key].textColor = color;
+    
+    const cell = getCell(month - 1, day);
+    if (cell) cell.style.color = color;
+  }
+  
+  /**
+   * Set a label/text for a specific date
+   * @param {number} month - Month (1-12)
+   * @param {number} day - Day of month (1-31)
+   * @param {string} label - Label text
+   */
+  function setLabel(month, day, label) {
+    const key = dateKey(currentYear, month - 1, day);
+    if (!cellData[key]) cellData[key] = {};
+    cellData[key].label = label;
+    
+    const cell = getCell(month - 1, day);
+    if (cell) {
+      let labelSpan = cell.querySelector('.cell-label');
+      if (!labelSpan) {
+        labelSpan = document.createElement('span');
+        labelSpan.className = 'cell-label';
+        cell.appendChild(labelSpan);
+      }
+      labelSpan.textContent = label;
+      labelSpan.title = label;
+    }
+  }
+  
+  /**
+   * Set both color and label for a date
+   * @param {number} month - Month (1-12)
+   * @param {number} day - Day of month (1-31)
+   * @param {object} options - { color, textColor, label }
+   */
+  function setCell(month, day, options) {
+    if (options.color) setColor(month, day, options.color);
+    if (options.textColor) setTextColor(month, day, options.textColor);
+    if (options.label) setLabel(month, day, options.label);
+  }
+  
+  /**
+   * Clear all customizations for a date
+   * @param {number} month - Month (1-12)
+   * @param {number} day - Day of month (1-31)
+   */
+  function clearCell(month, day) {
+    const key = dateKey(currentYear, month - 1, day);
+    delete cellData[key];
+    render();
+  }
+  
+  /**
+   * Clear all customizations
+   */
+  function clearAll() {
+    cellData = {};
+    render();
+  }
+  
+  /**
+   * Highlight a range of dates
+   * @param {number} startMonth - Start month (1-12)
+   * @param {number} startDay - Start day
+   * @param {number} endMonth - End month (1-12)
+   * @param {number} endDay - End day
+   * @param {object} options - { color, textColor, label }
+   */
+  function highlightRange(startMonth, startDay, endMonth, endDay, options) {
+    const start = new Date(currentYear, startMonth - 1, startDay);
+    const end = new Date(currentYear, endMonth - 1, endDay);
+    
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      setCell(d.getMonth() + 1, d.getDate(), options);
+    }
+  }
+  
+  /**
+   * Get all Sundays in the year
+   * @returns {Array} Array of {month, day} objects
+   */
+  function getSundays() {
+    const sundays = [];
+    for (let month = 0; month < 12; month++) {
+      const days = getDaysInMonth(currentYear, month);
+      for (let day = 1; day <= days; day++) {
+        if (getDayOfWeek(currentYear, month, day) === 0) {
+          sundays.push({ month: month + 1, day });
+        }
+      }
+    }
+    return sundays;
+  }
+  
+  /**
+   * Get all dates for a specific day of week
+   * @param {number} dayOfWeek - 0=Sunday, 1=Monday, ..., 6=Saturday
+   * @returns {Array} Array of {month, day} objects
+   */
+  function getDayOfWeekDates(dayOfWeek) {
+    const dates = [];
+    for (let month = 0; month < 12; month++) {
+      const days = getDaysInMonth(currentYear, month);
+      for (let day = 1; day <= days; day++) {
+        if (getDayOfWeek(currentYear, month, day) === dayOfWeek) {
+          dates.push({ month: month + 1, day });
+        }
+      }
+    }
+    return dates;
+  }
+  
+  /**
+   * Export current cell data as JSON
+   * @returns {string} JSON string
+   */
+  function exportData() {
+    return JSON.stringify({ year: currentYear, cells: cellData }, null, 2);
+  }
+  
+  /**
+   * Import cell data from JSON
+   * @param {string} json - JSON string from exportData()
+   */
+  function importData(json) {
+    const data = JSON.parse(json);
+    currentYear = data.year;
+    cellData = data.cells || {};
+    render();
+  }
+  
+  /**
+   * Get the current year
+   * @returns {number}
+   */
+  function getYear() {
+    return currentYear;
+  }
+  
+  // Initialize with URL param or current year
+  const urlParams = new URLSearchParams(window.location.search);
+  const yearParam = urlParams.get('year');
+  if (yearParam) {
+    currentYear = parseInt(yearParam, 10);
+  }
+  
+  // Initial render on load
+  document.addEventListener('DOMContentLoaded', () => render());
+  
+  // Public API
+  return {
+    render,
+    setColor,
+    setTextColor,
+    setLabel,
+    setCell,
+    clearCell,
+    clearAll,
+    highlightRange,
+    getSundays,
+    getDayOfWeekDates,
+    exportData,
+    importData,
+    getYear
+  };
+})();
+</script>
+</body>
+</html>
