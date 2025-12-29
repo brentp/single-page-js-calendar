@@ -73,7 +73,6 @@ table {
   table-layout: fixed;
 }
 td, th {
-  font-weight: normal;
   text-transform: uppercase;
   border-bottom: 1px solid #888;
   padding: 0 .3vmin;
@@ -474,6 +473,7 @@ const calendar = (function() {
             setTimeout(() => {
               btn.textContent = 'Save';
               btn.disabled = false;
+              updateSaveButtonStyle();
             }, 2000);
           };
           cell.appendChild(btn);
@@ -693,6 +693,7 @@ const calendar = (function() {
   function importJSONData(data) {
     if (data.year) currentYear = data.year;
     cellData = data.cells || {};
+    markDirty();
     render();
   }
   
@@ -760,6 +761,7 @@ const calendar = (function() {
           if (data.cells) {
             cellData = { ...cellData, ...data.cells };
           }
+          markDirty();
         } else {
           // Replace
           if (data.year) currentYear = data.year;
